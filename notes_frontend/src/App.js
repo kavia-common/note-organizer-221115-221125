@@ -139,6 +139,15 @@ function App() {
         onNew={handleCreate}
         busy={busy}
       />
+      {/* Global status strip for connectivity and load state */}
+      <div style={{ padding: '8px 16px' }}>
+        {loading && <div className="status">Loading notes from {getApiBase()}…</div>}
+        {!loading && error && (
+          <div className="status error">
+            {error} (API: {getApiBase()})
+          </div>
+        )}
+      </div>
       <div className="content">
         <Sidebar
           query={query}
