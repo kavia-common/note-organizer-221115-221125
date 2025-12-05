@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import './styles/theme.css';
 import './App.css';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
