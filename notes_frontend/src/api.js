@@ -5,10 +5,12 @@
 
 // PUBLIC_INTERFACE
 export function getApiBase() {
+  // Base URL priority: REACT_APP_API_BASE -> REACT_APP_BACKEND_URL -> http://localhost:3001
   const envA = process.env.REACT_APP_API_BASE;
   const envB = process.env.REACT_APP_BACKEND_URL;
   const fallback = 'http://localhost:3001';
   const base = (envA && envA.trim()) || (envB && envB.trim()) || fallback;
+  // Ensure no trailing slash to avoid double-slashes when joining paths.
   return base.replace(/\/*$/, '');
 }
 

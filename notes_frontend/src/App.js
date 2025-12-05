@@ -28,6 +28,7 @@ function App() {
 
   // Load notes on mount
   useEffect(() => {
+    // Initial fetch of notes on mount; shows global "Loading" and handles errors.
     let cancelled = false;
     setLoading(true);
     setError('');
@@ -35,6 +36,7 @@ function App() {
       .then((data) => {
         if (cancelled) return;
         setNotes(data || []);
+        // Auto-select first note on initial load
         if ((data || []).length && !activeId) {
           setActiveId(data[0].id);
         }
@@ -67,6 +69,7 @@ function App() {
 
   // PUBLIC_INTERFACE
   const handleCreate = async () => {
+    // Create a new blank note; once created, prepend to list and select it.
     setBusy(true); setError(''); setInfo('');
     try {
       const created = await api.create({ title: 'Untitled', content: '', tags: [] });
@@ -84,9 +87,10 @@ function App() {
   const handleDelete = async (id) => {
     if (!id) return;
     setBusy(true); setError(''); setInfo('');
-    // optimistic update
+    // Optimistic removal from UI; keep snapshot for rollback on error.
     const prevNotes = notes;
     setNotes((prev) => prev.filter((n) => n.id !== id));
+    // If the deleted note was active, select the next available note (or none).
     if (activeId === id) {
       const rest = notes.filter((n) => n.id !== id);
       setActiveId(rest.length ? rest[0].id : null);
@@ -95,7 +99,7 @@ function App() {
       await api.remove(id);
       setInfo('Note deleted');
     } catch (e) {
-      // rollback
+      // Roll back to previous list on failure.
       setNotes(prevNotes);
       setError(String(e.message || e));
     } finally {
@@ -107,16 +111,17 @@ function App() {
   const handleUpdate = async (patch) => {
     if (!active) return;
     setBusy(true); setError(''); setInfo('');
-    // optimistic update
+    // Optimistic inline update with rollback if request fails.
     const before = notes;
     const draft = { ...active, ...patch };
     setNotes((prev) => prev.map((n) => (n.id === active.id ? draft : n)));
     try {
       const updated = await api.update(active.id, patch);
+      // Apply server-confirmed state to ensure consistency.
       setNotes((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
       setInfo('Changes saved');
     } catch (e) {
-      // rollback
+      // Revert changes on failure.
       setNotes(before);
       setError(String(e.message || e));
     } finally {
@@ -126,6 +131,7 @@ function App() {
 
   // PUBLIC_INTERFACE
   const handleFieldChange = (field, value) => {
+    // Local, unsaved edits reflected immediately in UI; persisted on blur/Save.
     if (!active) return;
     const draft = { ...active, [field]: value };
     setNotes((prev) => prev.map((n) => (n.id === active.id ? draft : n)));
@@ -139,7 +145,8 @@ function App() {
         onNew={handleCreate}
         busy={busy}
       />
-      {/* Global status strip for connectivity and load state */}
+      {/* Global status strip for connectivity and load state.
+          Shows active API base for easier environment debugging. */}
       <div style={{ padding: '8px 16px' }}>
         {loading && <div className="status">Loading notes from {getApiBase()}…</div>}
         {!loading && error && (
